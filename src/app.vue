@@ -65,37 +65,60 @@
       return
     }
 
-    marks.value =await wretch('/marks')
-      .addon(wretchQueryString)
-      .query({
-        enrollment_number: e.values.enrollment_number
-      })
-      .get()
-      .error(402, () => {
-        toast.add({
-          detail: 'Fees not paid. Please clear your dues to check your results.',
-          life: 3000,
-          severity: 'error',
-          summary: 'Error'
+    try {
+      marks.value = await wretch('/marks')
+        .addon(wretchQueryString)
+        .query({
+          enrollment_number: e.values.enrollment_number
         })
-      })
-      .error(404, () => {
-        toast.add({
-          detail: 'No records found for the provided Enrollment Number.',
-          life: 3000,
-          severity: 'error',
-          summary: 'Error'
+        .get()
+        .error(402, () => {
+          
         })
-      })
-      .json<typeof marks.value>()
-      .catch(() => {
+        .error(404, () => {
+          toast.add({
+            detail: 'No records found for the provided Enrollment Number.',
+            life: 3000,
+            severity: 'error',
+            summary: 'Error'
+          })
+        })
+        .json<typeof marks.value>()
+    } catch (e) {
+      const error = e as Error
+
+      if ('status' in error) {
+        if (error.status === 402) {
+          toast.add({
+            detail: 'Fees not paid. Please clear your dues to check your results.',
+            life: 3000,
+            severity: 'error',
+            summary: 'Error'
+          })
+        } else if (error.status === 404) {
+          toast.add({
+            detail: 'No records found for the provided Enrollment Number.',
+            life: 3000,
+            severity: 'error',
+            summary: 'Error'
+          })
+        } else {
+          toast.add({
+            detail: 'An unexpected server error occurred. Please try again later.',
+            life: 3000,
+            severity: 'error',
+            summary: 'Error'
+          })
+      }
+    } else {
         toast.add({
           detail: 'An unexpected error occurred. Please try again later.',
           life: 3000,
           severity: 'error',
           summary: 'Error'
         })
-      })
+      }
+    }
   }
 </script>
 
