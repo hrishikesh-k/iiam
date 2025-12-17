@@ -68,14 +68,15 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
 }
 
 export default async function (_: Request, context: Context) {
-  const key = await importPKCS8(Netlify.env.get("GOOGLE_PRIVATE_KEY") as string, "RS256");
+  const env = JSON.parse(Buffer.from(Netlify.env.get("GOOGLE_KEY_BASE64") as string, 'base64').toString('utf8'))
+  const key = await importPKCS8(env.private_key, "RS256");
   const now = Math.floor(Date.now() / 1000);
 
   const jwt = await new SignJWT({
     aud: googleOauthUrl,
     exp: now + 3600,
     iat: now,
-    iss: Netlify.env.get("GOOGLE_CLIENT_EMAIL"),
+    iss: env.client_email,
     scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
   })
     .setProtectedHeader({
