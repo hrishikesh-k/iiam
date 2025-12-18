@@ -177,7 +177,7 @@ async function handleSubmit(e: FormSubmitEvent) {
 <template>
   <PVToast/>
   <div class="flex flex-col items-center justify-center">
-    <img v-bind:src="logo" width="384"/>
+    <img class="max-w-full" v-bind:src="logo" width="384"/>
     <h1 class="m-0 m-t-3">IIAM College, Kalyan :: Results Portal</h1>
     <PVForm class="m-t-12" validateOnSubmit v-bind:initialValues v-bind:resolver v-bind:validateOnValueUpdate="false" v-on:submit="handleSubmit" v-slot="$form">
       <PVFloatLabel>
@@ -203,10 +203,10 @@ async function handleSubmit(e: FormSubmitEvent) {
           </template>
         </PVColumn>
         <template v-slot:footer>
-          <div>
+          <div v-if="percentage">
             <p class="m-0">Marks obtained: {{ marksObtained }}</p>
             <p class="m-0">Maximum marks: {{ marksTotal }}</p>
-            <p class="m-0">Percentage: {{ percentage }}%</p>
+            <p class="m-0">Percentage: {{ percentage.toFixed(2) }}%</p>
             <p class="m-0">Result: {{ result }}</p>
           </div>
         </template>
@@ -258,6 +258,10 @@ async function handleSubmit(e: FormSubmitEvent) {
   
   .m-t-12 {
     margin-top: 3rem;
+  }
+  
+  .max-w-full {
+    max-width: 100%;
   }
   
   .overflow-hidden {
