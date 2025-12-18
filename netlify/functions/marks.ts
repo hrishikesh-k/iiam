@@ -10,9 +10,9 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
   const courseIndex = titleRow.findIndex((t) => /^course/i.test(t))
   log(`course_index: ${courseIndex}`)
   const feeIndex = titleRow.findIndex((t) => /^fee/i.test(t))
-  log(`fee_index: ${courseIndex}`)
+  log(`fee_index: ${feeIndex}`)
   const nameIndex = titleRow.findIndex((t) => /name$/i.test(t))
-  log(`name_index: ${courseIndex}`)
+  log(`name_index: ${nameIndex}`)
   const semesterIndex = titleRow.findIndex((t) => /year/i.test(t))
   log(`semester_index: ${courseIndex}`)
   const subjectIndices: number[] = []
@@ -28,20 +28,20 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
   /*
     subjectIndices would be something like [6, 8, 10, 12...]
     i would be [0, 1, 2, 3...]
-    
+
     when i = 0:
       dataRow[subjectIndices[0]] -> dataRow[6] (correct for internal)
       dataRow[subjectIndices[i + 1]] -> dataRow[subjectIndices[0 + 1]] ->
       dataRow[subjectIndices[1]] -> dataRow[8] (incorrect value for external
       as it's the value of internal for next subject), instead:
-      
-      dataRow[subjectIndices[i + 1] - 1] -> dataRow[subjectIndices[0 + 1] - 1] ->
-      dataRow[subjectIndices[1] - 1] -> dataRow[8 - 1] -> dataRow[7] (correct for external)
-      
+
+      dataRow[subjectIndices[i + 1] - 2] -> dataRow[subjectIndices[0 + 1] - 2] ->
+      dataRow[subjectIndices[1] - 2] -> dataRow[8 - 2] -> dataRow[6] (correct for external)
+
     when i is last (assume 8 for array length 9),
-      dataRow[subjectIndices[i + 1] - 1] -> dataRow[subjectIndices[8 + 1] - 1] ->
-      dataRow[subjectIndices[9] + 1] -> dataRow[undefined + 1] -> dataRow[NaN] -> undefined, instead:
-      
+      dataRow[subjectIndices[i + 1] - 2] -> dataRow[subjectIndices[8 + 1] - 2] ->
+      dataRow[subjectIndices[9] + 2] -> dataRow[undefined + 2] -> dataRow[NaN] -> undefined, instead:
+
       dataRow[subjectIndices[i] + 1] -> dataRow[subjectIndices[8] + 1] ->
       dataRow[(last item from subjectIndices) + 1] (correct for external)
   */
@@ -58,20 +58,23 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
           external: number
           internal: number
           name: string
+          result: boolean
           total: number
         } = {
           external: 0,
           internal: parseInt(dataRow[subjectIndices[i]], 10),
           name: s,
+          result: false,
           total: 0
         }
 
         if (i === subjectIndices.length - 1) {
           data.external = parseInt(dataRow[subjectIndices[i] + 1], 10)
         } else {
-          data.external = parseInt(dataRow[subjectIndices[i + 1] - 1], 10)
+          data.external = parseInt(dataRow[subjectIndices[i + 1] - 2], 10)
         }
 
+        data.result = data.internal >= 16 && data.external >= 24
         data.total = data.external + data.internal
         return data
       })
@@ -100,14 +103,14 @@ export default async function (_: Request, context: Context) {
     ).toString('utf8')
   )
 
-  log('parsed envv')
+  log('parsed env')
 
   const key = await importPKCS8(env.private_key, 'RS256')
   const now = Math.floor(Date.now() / 1000)
 
   const jwt = await new SignJWT({
     aud: googleOauthUrl,
-    exp: now + 300,
+    exp: now + 60,
     iat: now,
     iss: env.client_email,
     scope: 'https://www.googleapis.com/auth/spreadsheets.readonly'

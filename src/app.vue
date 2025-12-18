@@ -18,6 +18,7 @@ import wretchQueryString from 'wretch/addons/queryString'
 import logo from './assets/logo.jpg'
 
 const currentResult = ref<string>('')
+
 const initialValues = reactive({
   enrollment_number: ''
 })
@@ -31,6 +32,7 @@ const marks = ref<null | {
     external: number
     internal: number
     name: string
+    result: boolean
     total: number
   }[]
 }>(null)
@@ -122,6 +124,7 @@ async function handleSubmit(e: FormSubmitEvent) {
 
   try {
     submitting.value = true
+
     marks.value = await wretch('/marks')
       .addon(wretchQueryString)
       .query({
@@ -176,7 +179,7 @@ async function handleSubmit(e: FormSubmitEvent) {
 <template>
   <PVToast/>
   <div class="flex flex-col items-center justify-center">
-    <img class="max-w-full" v-bind:src="logo" width="384"/>
+    <img alt="logo" class="max-w-full" v-bind:src="logo" width="384"/>
     <h1 class="m-0 m-t-3">IIAM College, Kalyan :: Results Portal</h1>
     <PVForm class="m-t-12" validateOnSubmit v-bind:initialValues v-bind:resolver v-bind:validateOnValueUpdate="false" v-on:submit="handleSubmit" v-slot="$form">
       <PVFloatLabel>
@@ -189,21 +192,37 @@ async function handleSubmit(e: FormSubmitEvent) {
     <div class="m-t-12" v-if="marks && !submitting">
       <h2 class="m-0 text-center">{{ marks.name }}</h2>
       <h3 class="m-0 text-center">{{ marks.course }} ({{ marks.semester }})</h3>
-      <PVDataTable class="border-rounded-1.5 m-t-3 overflow-hidden" v-bind:value="marks.subjects">
-        <PVColumn field="name" header="Subject"/>
+      <PVDataTable scrollable class="border-rounded-1.5 m-t-3 max-w-full" v-bind:value="marks.subjects">
+        <PVColumn frozen field="name" header="Subject"/>
         <PVColumn field="internal" header="Internal">
           <template v-slot:body="slotProps">
-            <p v-bind:class="`m-0 text-center ${slotProps.data.internal < 16 ? 'text-red-500' : ''}`">{{ slotProps.data.internal }}</p>
+          <PVMessage size="small" v-bind:pt="{
+            content: 'justify-center'
+          }" v-bind:severity="slotProps.data.internal < 16 ? 'error' : 'contrast'" variant="simple">{{ slotProps.data.internal }}</PVMessage>
           </template>
         </PVColumn>
         <PVColumn field="external" header="External">
           <template v-slot:body="slotProps">
-            <p v-bind:class="`m-0 text-center ${slotProps.data.external < 24 ? 'text-red-500' : ''}`">{{ slotProps.data.external }}</p>
+            <PVMessage size="small" v-bind:pt="{
+              content: 'justify-center'
+            }" v-bind:severity="slotProps.data.external < 24 ? 'error' : 'contrast'" variant="simple">{{ slotProps.data.external }}</PVMessage>
           </template>
         </PVColumn>
         <PVColumn field="total" header="Total">
           <template v-slot:body="slotProps">
-            <p v-bind:class="`m-0 text-center ${slotProps.data.total < 40 ? 'text-red-500' : ''}`">{{ slotProps.data.total }}</p>
+            <PVMessage size="small" v-bind:pt="{
+              content: 'justify-center'
+            }" v-bind:severity="slotProps.data.total < 40 ? 'error' : 'contrast'" variant="simple">{{ slotProps.data.total }}</PVMessage>
+          </template>
+        </PVColumn>
+        <PVColumn field="result" header="Result">
+          <template v-slot:body="slotProps">
+            <PVMessage severity="success" size="small" v-bind:pt="{
+              content: 'justify-center'
+            }" v-if="slotProps.data.result" variant="simple">Pass</PVMessage>
+            <PVMessage severity="error" size="small" v-bind:pt="{
+              content: 'justify-center'
+            }" v-else variant="simple">Fail</PVMessage>
           </template>
         </PVColumn>
         <template v-slot:footer>
@@ -278,9 +297,5 @@ async function handleSubmit(e: FormSubmitEvent) {
   
   .text-center {
     text-align: center;
-  }
-  
-  .text-red-500 {
-    color: #fb2c36;
   }
 </style>
