@@ -1,22 +1,29 @@
-import type { Config, Context } from "@netlify/functions";
-import { importPKCS8, SignJWT } from "jose";
-import wretch from "wretch";
-import wretchFormUrlAddon from "wretch/addons/formUrl";
+import { log } from 'node:console'
+import type { Config, Context } from '@netlify/functions'
+import { importPKCS8, SignJWT } from 'jose'
+import wretch from 'wretch'
+import wretchFormUrlAddon from 'wretch/addons/formUrl'
 
-const googleOauthUrl = "https://oauth2.googleapis.com/token";
+const googleOauthUrl = 'https://oauth2.googleapis.com/token'
 
 function mapRowData(dataRow: string[], titleRow: string[]) {
-  const courseIndex = titleRow.findIndex((t) => /^course/i.test(t));
-  const feeIndex = titleRow.findIndex((t) => /^fee/i.test(t));
-  const nameIndex = titleRow.findIndex((t) => /name$/i.test(t));
-  const semesterIndex = titleRow.findIndex((t) => /year/i.test(t));
-  const subjectIndices: number[] = [];
+  const courseIndex = titleRow.findIndex((t) => /^course/i.test(t))
+  log(`course_index: ${courseIndex}`)
+  const feeIndex = titleRow.findIndex((t) => /^fee/i.test(t))
+  log(`fee_index: ${courseIndex}`)
+  const nameIndex = titleRow.findIndex((t) => /name$/i.test(t))
+  log(`name_index: ${courseIndex}`)
+  const semesterIndex = titleRow.findIndex((t) => /year/i.test(t))
+  log(`semester_index: ${courseIndex}`)
+  const subjectIndices: number[] = []
 
   for (const [indexOfTitle, title] of titleRow.entries()) {
     if (title.length === 0) {
-      subjectIndices.push(indexOfTitle - 1);
+      subjectIndices.push(indexOfTitle - 1)
     }
   }
+
+  log(`found ${subjectIndices.length} subjects`)
 
   /*
     subjectIndices would be something like [6, 8, 10, 12...]
@@ -41,114 +48,144 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
 
   return {
     course: dataRow[courseIndex],
-    fees: dataRow[feeIndex].toLowerCase() === "y",
+    fees: dataRow[feeIndex].toLowerCase() === 'y',
     name: dataRow[nameIndex],
     semester: dataRow[semesterIndex],
     subjects: subjectIndices
       .map((si) => titleRow[si])
       .map((s, i) => {
         const data: {
-          external: number;
-          internal: number;
-          name: string;
+          external: number
+          internal: number
+          name: string
         } = {
           external: 0,
           internal: parseInt(dataRow[subjectIndices[i]], 10),
-          name: s,
-        };
+          name: s
+        }
 
         if (i === subjectIndices.length - 1) {
-          data.external = parseInt(dataRow[subjectIndices[i] + 1], 10);
+          data.external = parseInt(dataRow[subjectIndices[i] + 1], 10)
         } else {
-          data.external = parseInt(dataRow[subjectIndices[i + 1] - 1], 10);
+          data.external = parseInt(dataRow[subjectIndices[i + 1] - 1], 10)
         }
-        return data;
-      }),
-  };
+        return data
+      })
+  }
 }
 
 export default async function (_: Request, context: Context) {
-  const env = JSON.parse(Buffer.from(Netlify.env.get("GOOGLE_KEY_BASE64") as string, 'base64').toString('utf8'))
-  const key = await importPKCS8(env.private_key, "RS256");
-  const now = Math.floor(Date.now() / 1000);
+  log('received request')
+  let enrollmentNumber = context.url.searchParams.get('enrollment_number')
+
+  if (enrollmentNumber) {
+    enrollmentNumber = enrollmentNumber.trim()
+  }
+
+  if (!enrollmentNumber || !/^\d{11}$/.test(enrollmentNumber.trim())) {
+    log('enrollment_number not found or invalid')
+    return new Response(null, {
+      status: 400
+    })
+  }
+
+  const env = JSON.parse(
+    Buffer.from(
+      Netlify.env.get('GOOGLE_KEY_BASE64') as string,
+      'base64'
+    ).toString('utf8')
+  )
+
+  log('parsed envv')
+
+  const key = await importPKCS8(env.private_key, 'RS256')
+  const now = Math.floor(Date.now() / 1000)
 
   const jwt = await new SignJWT({
     aud: googleOauthUrl,
-    exp: now + 3600,
+    exp: now + 300,
     iat: now,
     iss: env.client_email,
-    scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
+    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly'
   })
     .setProtectedHeader({
-      alg: "RS256",
-      typ: "JWT",
+      alg: 'RS256',
+      typ: 'JWT'
     })
-    .sign(key);
+    .sign(key)
+
+  log('jwt signed')
 
   const token = await wretch(googleOauthUrl)
     .addon(wretchFormUrlAddon)
     .formUrl({
       assertion: jwt,
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer'
     })
     .post()
     .json<{
-      access_token: string;
-    }>();
+      access_token: string
+    }>()
+
+  log('received access_token from Google')
 
   const wretchGoogleSheet = wretch(
-    "https://sheets.googleapis.com/v4/spreadsheets/1xIMK-96S5WnbEx4YR-LSTJZjhzadhp3kJ6W7IaNdz94",
-  ).auth(`Bearer ${token.access_token}`);
+    'https://sheets.googleapis.com/v4/spreadsheets/1xIMK-96S5WnbEx4YR-LSTJZjhzadhp3kJ6W7IaNdz94'
+  ).auth(`Bearer ${token.access_token}`)
 
   const workbook = await wretchGoogleSheet.get().json<{
     sheets: {
       properties: {
-        sheetId: string;
-        title: string;
-      };
-    }[];
-  }>();
+        sheetId: string
+        title: string
+      }
+    }[]
+  }>()
 
-  let dataRow: string[] = [];
-  let titleRow: string[] = [];
+  log('fetched workbook from Google')
+
+  let dataRow: string[] = []
+  let titleRow: string[] = []
 
   for (const sheet of workbook.sheets) {
+    log(`parsing sheet ${sheet.properties.sheetId}: ${sheet.properties.title}`)
+
     const rows = await wretchGoogleSheet
       .get(`/values/${sheet.properties.title}`)
       .json<{
-        values: string[][];
-      }>();
+        values: string[][]
+      }>()
 
     for (const row of rows.values) {
-      const rowItemsTrimmed = row.map((r) => r.trim());
+      const rowItemsTrimmed = row.map((r) => r.trim())
 
-      if (
-        rowItemsTrimmed.includes(
-          context.url.searchParams.get("enrollment_number") || "0",
-        )
-      ) {
-        dataRow = rowItemsTrimmed;
+      if (rowItemsTrimmed.includes(enrollmentNumber)) {
+        log('row appears to be data row')
+        dataRow = rowItemsTrimmed
       } else if (rowItemsTrimmed.some((r) => /^enroll?ment\s*no\.$/i.test(r))) {
-        titleRow = rowItemsTrimmed;
+        log('row appears to be title row')
+        titleRow = rowItemsTrimmed
       }
     }
 
     if (dataRow.length > 0) {
-      break;
+      break
     }
   }
 
-  const data = mapRowData(dataRow, titleRow);
+  const data = mapRowData(dataRow, titleRow)
+  log('results mapped')
 
   if (data.fees) {
-    return Response.json(data);
+    return Response.json(data)
   } else {
     return new Response(null, {
-      status: 402,
-    });
+      status: 402
+    })
   }
 }
 
 export const config: Config = {
-  path: "/marks",
-};
+  method: 'GET',
+  path: '/marks'
+}

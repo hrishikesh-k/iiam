@@ -25,7 +25,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "lint": "biome check"
   },
   "type": "module",
   "version": "0.0.1"
