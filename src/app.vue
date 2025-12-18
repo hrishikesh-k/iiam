@@ -129,16 +129,8 @@ async function handleSubmit(e: FormSubmitEvent) {
         enrollment_number: e.values.enrollment_number
       })
       .get()
-      .error(402, () => {})
-      .error(404, () => {
-        toast.add({
-          detail: 'No records found for the provided Enrollment Number.',
-          life: 3000,
-          severity: 'error',
-          summary: 'Error'
-        })
-      })
       .json<typeof marks.value>()
+
     currentResult.value = e.values.enrollment_number
   } catch (e) {
     const error = e as Error
