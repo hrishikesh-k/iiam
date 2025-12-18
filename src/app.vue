@@ -31,6 +31,7 @@ const marks = ref<null | {
     external: number
     internal: number
     name: string
+    total: number
   }[]
 }>(null)
 
@@ -39,9 +40,7 @@ const marksObtained = computed(() => {
     return null
   }
 
-  return marks.value.subjects.reduce((val, sub1) => {
-    return val + sub1.external + sub1.internal
-  }, 0)
+  return marks.value.subjects.reduce((val, sub1) => val + sub1.total, 0)
 })
 
 const marksTotal = computed(() => {
@@ -200,6 +199,11 @@ async function handleSubmit(e: FormSubmitEvent) {
         <PVColumn field="external" header="External">
           <template v-slot:body="slotProps">
             <p v-bind:class="`m-0 text-center ${slotProps.data.external < 24 ? 'text-red-500' : ''}`">{{ slotProps.data.external }}</p>
+          </template>
+        </PVColumn>
+        <PVColumn field="total" header="Total">
+          <template v-slot:body="slotProps">
+            <p v-bind:class="`m-0 text-center ${slotProps.data.total < 40 ? 'text-red-500' : ''}`">{{ slotProps.data.total }}</p>
           </template>
         </PVColumn>
         <template v-slot:footer>

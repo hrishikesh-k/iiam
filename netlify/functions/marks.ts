@@ -58,10 +58,12 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
           external: number
           internal: number
           name: string
+          total: number
         } = {
           external: 0,
           internal: parseInt(dataRow[subjectIndices[i]], 10),
-          name: s
+          name: s,
+          total: 0
         }
 
         if (i === subjectIndices.length - 1) {
@@ -69,6 +71,8 @@ function mapRowData(dataRow: string[], titleRow: string[]) {
         } else {
           data.external = parseInt(dataRow[subjectIndices[i + 1] - 1], 10)
         }
+
+        data.total = data.external + data.internal
         return data
       })
   }
