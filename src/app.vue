@@ -192,7 +192,7 @@ async function handleSubmit(e: FormSubmitEvent) {
     <div class="m-t-12 w-full" v-if="marks && !submitting">
       <h2 class="m-0 text-center">{{ marks.name }}</h2>
       <h3 class="m-0 text-center">{{ marks.course }} ({{ marks.semester }})</h3>
-      <PVDataTable scrollable class="border-rounded-1.5 m-t-3 overflow-hidden" v-bind:value="marks.subjects">
+      <PVDataTable scrollable class="border-rounded-1.5 m-t-3 m-x-auto max-w-200 overflow-hidden" v-bind:value="marks.subjects">
         <PVColumn frozen field="name" header="Subject"/>
         <PVColumn field="internal" header="Internal">
           <template v-slot:body="slotProps">
@@ -254,47 +254,48 @@ async function handleSubmit(e: FormSubmitEvent) {
   .flex-col {
     flex-direction: column;
   }
-  
-  .font-600 {
-    font-weight: 600;
-  }
-  
+
   .font-inter {
     font-family: "Inter", sans-serif;
   }
-  
+
   .items-center {
     align-items: center;
   }
-  
+
   .justify-center {
     justify-content: center;
   }
-  
+
   .m-0 {
     margin: 0;
   }
-  
+
   .m-t-3 {
     margin-top: 0.75rem;
   }
-  
+
   .m-t-12 {
     margin-top: 3rem;
   }
   
+  .m-x-auto {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .max-w-200 {
+    max-width: 50rem;
+  }
+
   .max-w-full {
     max-width: 100%;
   }
-  
-  .min-w-40 {
-    min-width: 10rem;
-  }
-  
+
   .overflow-hidden {
     overflow: hidden;
   }
-  
+
   .p-6 {
     padding: 1.5rem;
   }
