@@ -61,14 +61,17 @@ const percentage = computed(() => {
 })
 
 const result = computed(() => {
-  if (!percentage.value) {
+  if (!marks.value || !percentage.value) {
     return null
   }
 
-  if (percentage.value > 40) {
-    return 'Pass'
-  } else {
+  if (
+    percentage.value < 40 ||
+    marks.value.subjects.some((m) => m.external < 24 || m.internal < 16)
+  ) {
     return 'Fail'
+  } else {
+    return 'Pass'
   }
 })
 
@@ -197,15 +200,25 @@ async function handleSubmit(e: FormSubmitEvent) {
       <h3 class="m-0 text-center">{{ marks.course }} ({{ marks.semester }})</h3>
       <PVDataTable class="border-rounded-1.5 m-t-3 overflow-hidden" v-bind:value="marks.subjects">
         <PVColumn field="name" header="Subject"/>
-        <PVColumn field="internal" header="Internal"/>
-        <PVColumn field="external" header="External"/>
+        <PVColumn field="internal" header="Internal">
+          <template v-slot:body="slotProps">
+            <p v-bind:class="`m-0 text-center ${slotProps.data.internal < 16 ? 'text-red-500' : ''}`">{{ slotProps.data.internal }}</p>
+          </template>
+        </PVColumn>
+        <PVColumn field="external" header="External">
+          <template v-slot:body="slotProps">
+            <p v-bind:class="`m-0 text-center ${slotProps.data.external < 24 ? 'text-red-500' : ''}`">{{ slotProps.data.external }}</p>
+          </template>
+        </PVColumn>
+        <template v-slot:footer>
+          <div>
+            <p class="m-0">Marks obtained: {{ marksObtained }}</p>
+            <p class="m-0">Maximum marks: {{ marksTotal }}</p>
+            <p class="m-0">Percentage: {{ percentage }}%</p>
+            <p class="m-0">Result: {{ result }}</p>
+          </div>
+        </template>
       </PVDataTable>
-      <div class="m-t-3">
-        <p class="m-0">Marks obtained: {{ marksObtained }}</p>
-        <p class="m-0">Maximum marks: {{ marksTotal }}</p>
-        <p class="m-0">Percentage: {{ percentage }}%</p>
-        <p class="m-0">Result: {{ result }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -225,6 +238,10 @@ async function handleSubmit(e: FormSubmitEvent) {
   
   .flex-col {
     flex-direction: column;
+  }
+  
+  .font-600 {
+    font-weight: 600;
   }
   
   .font-inter {
@@ -261,5 +278,9 @@ async function handleSubmit(e: FormSubmitEvent) {
   
   .text-center {
     text-align: center;
+  }
+  
+  .text-red-500 {
+    color: #fb2c36;
   }
 </style>
