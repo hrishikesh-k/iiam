@@ -189,10 +189,10 @@ async function handleSubmit(e: FormSubmitEvent) {
       <PVMessage severity="error" size="small" v-if="$form.enrollment_number?.invalid" variant="simple">{{ $form.enrollment_number.error.message }}</PVMessage>
       <PVButton class="m-t-3" label="Submit" severity="secondary" type="submit" v-bind:loading="submitting"/>
     </PVForm>
-    <div class="m-t-12" v-if="marks && !submitting">
+    <div class="m-t-12 w-full" v-if="marks && !submitting">
       <h2 class="m-0 text-center">{{ marks.name }}</h2>
       <h3 class="m-0 text-center">{{ marks.course }} ({{ marks.semester }})</h3>
-      <PVDataTable scrollable class="border-rounded-1.5 m-t-3 max-w-full" v-bind:value="marks.subjects">
+      <PVDataTable scrollable class="border-rounded-1.5 m-t-3 overflow-hidden" v-bind:value="marks.subjects">
         <PVColumn frozen field="name" header="Subject"/>
         <PVColumn field="internal" header="Internal">
           <template v-slot:body="slotProps">
@@ -287,6 +287,10 @@ async function handleSubmit(e: FormSubmitEvent) {
     max-width: 100%;
   }
   
+  .min-w-40 {
+    min-width: 10rem;
+  }
+  
   .overflow-hidden {
     overflow: hidden;
   }
@@ -297,5 +301,9 @@ async function handleSubmit(e: FormSubmitEvent) {
   
   .text-center {
     text-align: center;
+  }
+  
+  .w-full {
+    width: 100%;
   }
 </style>
