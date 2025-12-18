@@ -136,6 +136,7 @@ async function handleSubmit(e: FormSubmitEvent) {
     currentResult.value = e.values.enrollment_number
   } catch (e) {
     const error = e as Error
+    marks.value  = null
 
     if ('status' in error) {
       if (error.status === 402) {
@@ -246,7 +247,7 @@ async function handleSubmit(e: FormSubmitEvent) {
   .box-border {
     box-sizing: border-box;
   }
-  
+
   .flex {
     display: flex;
   }
@@ -278,12 +279,12 @@ async function handleSubmit(e: FormSubmitEvent) {
   .m-t-12 {
     margin-top: 3rem;
   }
-  
+
   .m-x-auto {
     margin-left: auto;
     margin-right: auto;
   }
-  
+
   .max-w-200 {
     max-width: 50rem;
   }
@@ -299,11 +300,11 @@ async function handleSubmit(e: FormSubmitEvent) {
   .p-6 {
     padding: 1.5rem;
   }
-  
+
   .text-center {
     text-align: center;
   }
-  
+
   .w-full {
     width: 100%;
   }
