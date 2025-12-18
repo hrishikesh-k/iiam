@@ -180,6 +180,12 @@ export default async function (_: Request, context: Context) {
     }
   }
 
+  if (dataRow.length === 0) {
+    return new Response(null, {
+      status: 404
+    })
+  }
+
   const data = mapRowData(dataRow, titleRow)
   log('results mapped')
 
