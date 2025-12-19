@@ -32,7 +32,6 @@ const marks = ref<null | {
     external: number
     internal: number
     name: string
-    result: boolean
     total: number
   }[]
 }>(null)
@@ -66,10 +65,7 @@ const result = computed(() => {
     return null
   }
 
-  if (
-    percentage.value < 40 ||
-    marks.value.subjects.some((m) => m.external < 24 || m.internal < 16)
-  ) {
+  if (percentage.value < 40) {
     return 'Fail'
   } else {
     return 'Pass'
@@ -136,7 +132,7 @@ async function handleSubmit(e: FormSubmitEvent) {
     currentResult.value = e.values.enrollment_number
   } catch (e) {
     const error = e as Error
-    marks.value  = null
+    marks.value = null
 
     if ('status' in error) {
       if (error.status === 402) {
