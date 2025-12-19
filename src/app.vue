@@ -65,7 +65,7 @@ const result = computed(() => {
     return null
   }
 
-  if (percentage.value < 40) {
+  if (percentage.value < 40 || marks.value.subjects.some((s) => s.total < 40)) {
     return 'Fail'
   } else {
     return 'Pass'
