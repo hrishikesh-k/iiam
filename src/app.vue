@@ -214,12 +214,12 @@ async function handleSubmit(e: FormSubmitEvent) {
         </PVColumn>
         <PVColumn field="result" header="Result">
           <template v-slot:body="slotProps">
-            <PVMessage severity="success" size="small" v-bind:pt="{
-              content: 'justify-center'
-            }" v-if="slotProps.data.result" variant="simple">Pass</PVMessage>
             <PVMessage severity="error" size="small" v-bind:pt="{
               content: 'justify-center'
-            }" v-else variant="simple">Fail</PVMessage>
+            }" v-if="slotProps.data.total < 40" variant="simple">Fail</PVMessage>
+            <PVMessage severity="success" size="small" v-bind:pt="{
+              content: 'justify-center'
+            }" v-else variant="simple">Pass</PVMessage>
           </template>
         </PVColumn>
         <template v-slot:footer>
